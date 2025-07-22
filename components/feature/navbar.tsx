@@ -151,7 +151,12 @@ export default function NavBar() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 border-none bg-none hover:bg-none hover:text-white px-2 py-0"
+              className="
+      flex items-center gap-2
+      border-none bg-[#151515] hover:bg-[#151515] focus:bg-[#151515]
+      text-white hover:text-white focus:text-white
+      px-2 py-0 transition-colors
+    "
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/user/user.png" />
@@ -167,11 +172,35 @@ export default function NavBar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-[#151515] text-white">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-[#222222] 
+  hover:text-[#FFCC00] 
+  focus:bg-[#222222]
+  focus:text-[#FFCC00]
+  transition-colors"
+            >
+              Profile
+            </DropdownMenuItem>
 
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-[#222222]
+  hover:text-[#FFCC00] 
+  focus:bg-[#222222]
+  focus:text-[#FFCC00]
+  transition-colors"
+            >
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-[#222222]  
+  hover:text-[#FFCC00] 
+  focus:bg-[#222222]
+  focus:text-[#FFCC00]
+  transition-colors"
+            >
+              Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

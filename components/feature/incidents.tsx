@@ -2,6 +2,7 @@
 
 import LoadingScreen from "@/components/custom/screen-loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate, formatDate2, formatTime } from "@/lib/helpers";
 import { Incident } from "@/types/incidents";
 import {
   CalendarDays,
@@ -53,33 +54,7 @@ export default function IncidentPreview() {
     getIncidents();
   }, []);
 
-  function formatTime(dateStr: string) {
-    return new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).format(new Date(dateStr));
-  }
-
-  function formatDate(dateStr: string) {
-    // For '7-Jul-2025' style
-    return new Intl.DateTimeFormat("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    })
-      .format(new Date(dateStr))
-      .replace(/ /g, "-");
-  }
-
-  function formatDate2(dateStr: string) {
-    const dt = new Date(dateStr);
-    const month = dt.getMonth() + 1; // Zero-based months: add 1
-    const day = dt.getDate().toString().padStart(2, "0"); // Always 2 digits
-    const year = dt.getFullYear();
-    return `${month}/${day}/${year}`;
-  }
+ 
   const INCIDENT_TYPE_ICONS = [
     {
       key: "Unauthorized",
@@ -203,10 +178,12 @@ export default function IncidentPreview() {
                 </div>
               </div>
             </CardTitle>
+            
             <CardContent className="space-y-4 mt-4 px-1">
               {incidents.map((incident: Incident) => {
                 return (
                   <div
+                    onClick={() => setSelectedIncident(incident)}
                     key={incident.id}
                     className={`
     flex gap-3 items-center rounded-lg p-2
@@ -236,10 +213,7 @@ export default function IncidentPreview() {
                           )?.icon
                         }
 
-                        <span
-                          className="font-semibold text-white text-sm"
-                          onClick={() => setSelectedIncident(incident)}
-                        >
+                        <span className="font-semibold text-white text-sm">
                           {incident.type}
                         </span>
                       </div>
@@ -286,7 +260,10 @@ export default function IncidentPreview() {
                     </div>
                     {/* Resolve Button */}
                     <button
-                      onClick={() => handleResolve(incident.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResolve(incident.id);
+                      }}
                       disabled={resolvingIncidentIds.includes(incident.id)}
                       className="ml-2 text-[#FFCC00] hover:underline flex font-bold text-[15px]"
                     >
