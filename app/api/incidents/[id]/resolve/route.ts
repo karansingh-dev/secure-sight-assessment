@@ -7,10 +7,11 @@ const UUID_REGEX =
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const incidentId = params.id;
+    const { id } = await params;
+    const incidentId = id;
 
     // Validate UUID
     if (!UUID_REGEX.test(incidentId)) {
