@@ -1,0 +1,32 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Camera {
+  id        String     @id @default(uuid()) @db.Uuid
+  name      String
+  location  String
+  incidents Incident[]
+}
+
+model Incident {
+  id           String   @id @default(uuid()) @db.Uuid
+  cameraId     String   @map("camera_id") @db.Uuid
+  type         String
+  tsStart      DateTime @map("ts_start")
+  tsEnd        DateTime @map("ts_end")
+  thumbnailUrl String
+  resolved     Boolean  @default(false)
+  camera       Camera   @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+}
