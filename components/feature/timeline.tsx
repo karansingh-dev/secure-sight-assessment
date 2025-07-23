@@ -100,7 +100,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging,handleMouseMove]);
 
   if (!uniqueCameras) return null;
 
