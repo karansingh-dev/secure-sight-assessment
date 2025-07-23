@@ -68,7 +68,7 @@ export default function NavBar() {
 
   "
         ></div>
-        <Link href="/dashboard" className="flex items-center gap-1">
+        <Link href="/" className="flex items-center gap-1">
           <svg
             width="13"
             height="12"
