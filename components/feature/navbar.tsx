@@ -145,7 +145,6 @@ export default function NavBar() {
         </Link>
       </div>
 
-      {/* User Dropdown */}
       <div className="text-white">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
