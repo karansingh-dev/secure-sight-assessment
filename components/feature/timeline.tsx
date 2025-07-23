@@ -160,7 +160,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                 return (
                   <div
                     key={camera.id}
-                    className="flex  rounded p-2 items-center h-15 mt-4  w-[2500px] border-b border-gray-700"
+                    className="flex  rounded p-2 items-center h-15 mt-4 w-[2510px] border-b border-gray-700"
                   >
                     <p className="w-40 text-white font-medium shrink-0">
                       {camera.name}
@@ -176,7 +176,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                               INCIDENT_TYPE_COLORS[incident.type] ??
                               "bg-[#292929]"
                             }`}
-                            style={{ left: `${left}px` }}
+                            style={{ left: `${left - 7}px` }}
                           >
                             {
                               INCIDENT_TYPE_ICONS.find(
