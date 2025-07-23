@@ -1,3 +1,3 @@
-export default function (){
-    return <div>Cameras</div>
+export default function Camera () {
+  return <div>Cameras</div>;
 }
