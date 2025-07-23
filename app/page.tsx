@@ -1,5 +1,5 @@
 "use client";
-import TimeLineSvg from "@/components/custom/time-line-svg";
+
 import IncidentPreview from "@/components/feature/incidents";
 import NavBar from "@/components/feature/navbar";
 
