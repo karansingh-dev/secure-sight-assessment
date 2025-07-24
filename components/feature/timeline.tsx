@@ -18,6 +18,7 @@ type Camera = {
 type TimelineProps = {
   uniqueCameras: Camera[];
   incidents: Incident[];
+  onIncidentSelect: (incident: Incident | null) => void;
 };
 const INCIDENT_TYPE_COLORS: Record<string, string> = {
   "Unauthorized Access": "bg-[#481607]",
@@ -25,62 +26,144 @@ const INCIDENT_TYPE_COLORS: Record<string, string> = {
   "Face Recognised": "bg-[#172554]",
 };
 
-export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
+export default function Timeline({
+  uniqueCameras,
+  incidents,
+  onIncidentSelect,
+}: TimelineProps) {
   const [scrubberLeft, setScrubberLeft] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      setIsPlaying(false);
-    } else {
-      // Play
-      setIsPlaying(true);
-      intervalRef.current = setInterval(() => {
-        setScrubberLeft((prev) => {
-          const next = prev + SCRUBBER_SPEED;
+  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(
+    uniqueCameras.length > 0 ? uniqueCameras[0].id : null
+  );
 
-          if (next >= MAX_WIDTH) {
-            clearInterval(intervalRef.current!);
-            setIsPlaying(false);
-            return MAX_WIDTH;
-          }
+  const skipToNextIncident = () => {
+    if (!selectedCameraId) return;
 
-          return next;
-        });
-      }, 50);
+    const currentTime = getTimeFromLeftPx(scrubberLeft);
+    const currentTimeSeconds = parseTimeToSeconds(currentTime);
+
+    // Get incidents for selected camera, sorted by start time
+    const selectedCameraIncidents = incidents
+      .filter((incident) => incident.camera.id === selectedCameraId)
+      .sort(
+        (a, b) =>
+          parseTimeToSeconds(formatTime(a.tsStart)) -
+          parseTimeToSeconds(formatTime(b.tsStart))
+      );
+
+    // Find the next incident after current scrubber position
+    const nextIncident = selectedCameraIncidents.find((incident) => {
+      const incidentStartSeconds = parseTimeToSeconds(
+        formatTime(incident.tsStart)
+      );
+      return incidentStartSeconds > currentTimeSeconds;
+    });
+
+    if (nextIncident) {
+      const nextIncidentPosition = getOffsetPxFromTime(nextIncident.tsStart);
+      updateScrubberAndIncident(Math.min(nextIncidentPosition, MAX_WIDTH));
     }
   };
 
-  const TIMELINE_OFFSET = 160;
-  const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const skipToPreviousIncident = () => {
+    if (!selectedCameraId) return;
 
-  const SCRUBBER_SPEED = 2;
-  const MAX_WIDTH = 2350;
+    const currentTime = getTimeFromLeftPx(scrubberLeft);
+    const currentTimeSeconds = parseTimeToSeconds(currentTime);
 
-  const handleMouseDown = () => {
-    setIsDragging(true);
+    // Get incidents for selected camera, sorted by start time (reverse order for previous)
+    const selectedCameraIncidents = incidents
+      .filter((incident) => incident.camera.id === selectedCameraId)
+      .sort(
+        (a, b) =>
+          parseTimeToSeconds(formatTime(b.tsStart)) -
+          parseTimeToSeconds(formatTime(a.tsStart))
+      );
+
+    // Find the previous incident before current scrubber position
+    const previousIncident = selectedCameraIncidents.find((incident) => {
+      const incidentStartSeconds = parseTimeToSeconds(
+        formatTime(incident.tsStart)
+      );
+      return incidentStartSeconds < currentTimeSeconds;
+    });
+
+    if (previousIncident) {
+      const previousIncidentPosition = getOffsetPxFromTime(
+        previousIncident.tsStart
+      );
+      updateScrubberAndIncident(Math.max(previousIncidentPosition, 0));
+    }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+  const [pendingIncidentUpdate, setPendingIncidentUpdate] = useState<{
+    scrubberPosition: number;
+    cameraId: string | null;
+  } | null>(null);
 
-    const timelineRect = timelineRef.current?.getBoundingClientRect();
-    if (!timelineRect) return;
+  const [currentActiveIncident, setCurrentActiveIncident] =
+    useState<Incident | null>(null);
 
-    const newLeft = e.clientX - timelineRect.left - TIMELINE_OFFSET;
+  useEffect(() => {
+    if (pendingIncidentUpdate) {
+      const { scrubberPosition, cameraId } = pendingIncidentUpdate;
 
-    setScrubberLeft(Math.max(0, Math.min(newLeft, MAX_WIDTH)));
-  };
+      if (!cameraId) {
+        onIncidentSelect(null);
+        setCurrentActiveIncident(null);
+        setPendingIncidentUpdate(null);
+        return;
+      }
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+      const currentTime = getTimeFromLeftPx(scrubberPosition);
+      const currentTimeSeconds = parseTimeToSeconds(currentTime);
+
+      const selectedCameraIncidents = incidents.filter(
+        (incident) => incident.camera.id === cameraId
+      );
+
+      // Check if current active incident is still valid
+      if (currentActiveIncident) {
+        const activeEndSeconds = parseTimeToSeconds(
+          formatTime(currentActiveIncident.tsEnd)
+        );
+
+        // Check If current incident is still active , then don't change it
+        if (currentTimeSeconds <= activeEndSeconds) {
+          setPendingIncidentUpdate(null);
+          return;
+        }
+      }
+
+      // Find new incident only if current one has ended or doesn't exist
+      let matchingIncident = null;
+      for (const incident of selectedCameraIncidents) {
+        const startSeconds = parseTimeToSeconds(formatTime(incident.tsStart));
+        const endSeconds = parseTimeToSeconds(formatTime(incident.tsEnd));
+
+        if (
+          currentTimeSeconds >= startSeconds &&
+          currentTimeSeconds <= endSeconds
+        ) {
+          matchingIncident = incident;
+          break;
+        }
+      }
+
+      // Update the active incident and  set selectedIncident
+      setCurrentActiveIncident(matchingIncident);
+      onIncidentSelect(matchingIncident);
+      setPendingIncidentUpdate(null);
+    }
+  }, [
+    pendingIncidentUpdate,
+    incidents,
+    onIncidentSelect,
+    currentActiveIncident,
+  ]);
 
   useEffect(() => {
     window.addEventListener("mousemove", handleMouseMove);
@@ -94,6 +177,80 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
     };
   }, [isDragging]);
 
+  const updateScrubberAndIncident = (newLeft: number) => {
+    setScrubberLeft(newLeft);
+    setPendingIncidentUpdate({
+      scrubberPosition: newLeft,
+      cameraId: selectedCameraId,
+    });
+  };
+
+  const handleCameraSelect = (cameraId: string) => {
+    setSelectedCameraId(cameraId);
+    setCurrentActiveIncident(null);
+    setPendingIncidentUpdate({
+      scrubberPosition: scrubberLeft,
+      cameraId: cameraId,
+    });
+  };
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      intervalRef.current = setInterval(() => {
+        setScrubberLeft((prev) => {
+          const next = prev + SCRUBBER_SPEED;
+
+          if (next >= MAX_WIDTH) {
+            clearInterval(intervalRef.current!);
+            setIsPlaying(false);
+            return MAX_WIDTH;
+          }
+
+          setPendingIncidentUpdate({
+            scrubberPosition: next,
+            cameraId: selectedCameraId,
+          });
+
+          return next;
+        });
+      }, 50);
+    }
+  };
+
+  const TIMELINE_OFFSET = 160;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const SCRUBBER_SPEED = 1;
+  const MAX_WIDTH = 2350;
+
+  const handleMouseDown = () => {
+    setIsDragging(true);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+
+    const timelineRect = timelineRef.current?.getBoundingClientRect();
+    if (!timelineRect) return;
+
+    const newLeft = e.clientX - timelineRect.left - TIMELINE_OFFSET;
+    const clampedLeft = Math.max(0, Math.min(newLeft, MAX_WIDTH));
+
+    updateScrubberAndIncident(clampedLeft);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   if (!uniqueCameras) return null;
 
   return (
@@ -101,7 +258,16 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
       {/* Controls */}
       <div className="bg-[#131313] rounded-sm p-4 text-white">
         <div className="flex gap-3 items-center">
-          <SkipBack className="w-4 h-4" />
+          {/* Skip to previous incident */}
+          <button
+            onClick={skipToPreviousIncident}
+            className="p-1 hover:bg-[#242424] rounded transition-colors"
+            title="Skip to previous incident"
+          >
+            <SkipBack className="w-4 h-4" />
+          </button>
+
+          {/* Play/Pause button */}
           <button
             onClick={togglePlay}
             className="w-6 h-6 rounded-full flex justify-center items-center bg-white"
@@ -112,10 +278,22 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
               <Play className="w-4 h-4 text-black" />
             )}
           </button>
-          <SkipForward className="w-4 h-4" />
-          {/* Show Time */}
+
+          {/* Skip to next incident */}
+          <button
+            onClick={skipToNextIncident}
+            className="p-1 hover:bg-[#242424] rounded transition-colors"
+            title="Skip to next incident"
+          >
+            <SkipForward className="w-4 h-4" />
+          </button>
+
           <span className="ml-4 text-sm text-gray-300">
             {getTimeFromLeftPx(scrubberLeft)}
+          </span>
+          <span className="ml-4  ">
+            {uniqueCameras.find((c) => c.id === selectedCameraId)?.name ||
+              "None"}
           </span>
         </div>
       </div>
@@ -143,18 +321,26 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                   {getTimeFromLeftPx(scrubberLeft)}
                 </span>
               </div>
-              {/* <div className="flex flex-col"> */}
+
               {uniqueCameras.map((camera) => {
                 const cameraIncidents = incidents.filter(
                   (i) => i.camera.id === camera.id
                 );
+                const isSelected = selectedCameraId === camera.id;
 
                 return (
                   <div
                     key={camera.id}
-                    className="flex  rounded p-2 items-center h-15 mt-4 w-[2510px] border-b border-gray-700"
+                    onClick={() => handleCameraSelect(camera.id)}
+                    className={`flex rounded p-2 items-center h-15 mt-4 w-[2510px] border-b border-gray-700 cursor-pointer transition-colors
+        ${isSelected ? "bg-[#1a1a1a] border-yellow-300" : "hover:bg-[#0d0d0d]"}
+      `}
                   >
-                    <p className="w-40 text-white font-medium shrink-0">
+                    <p
+                      className={`w-40 font-medium shrink-0 ${
+                        isSelected ? "text-yellow-300" : "text-white"
+                      }`}
+                    >
                       {camera.name}
                     </p>
                     <div className="relative w-[2600px] h-[30px] overflow-hidden rounded-sm">
@@ -164,10 +350,10 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                         return (
                           <div
                             key={incident.id}
-                            className={`absolute flex items-center  rounded p-1 ${
+                            className={`absolute flex items-center rounded p-1 ${
                               INCIDENT_TYPE_COLORS[incident.type] ??
                               "bg-[#292929]"
-                            }`}
+                            } ${isSelected ? "ring-1 ring-yellow-300" : ""}`}
                             style={{ left: `${left}px` }}
                           >
                             {

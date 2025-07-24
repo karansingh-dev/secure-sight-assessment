@@ -38,7 +38,7 @@ export function formatTime(dateStr: string) {
   ).padStart(2, "0")}:${String(date.getUTCSeconds()).padStart(2, "0")}`;
 }
 
-// Format a UTC date (e.g., 7-Jul-2025)
+// Format a UTC date (like 7-Jul-2025)
 export function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const day = date.getUTCDate();
@@ -59,7 +59,7 @@ export function formatDate2(dateStr: string) {
   return `${month}/${day}/${year}`;
 }
 
-export function parseTimeToSeconds(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 3600 + minutes * 60;
-}
+export const parseTimeToSeconds = (timeString: string): number => {
+  const [hours, minutes, seconds] = timeString.split(":").map(Number);
+  return hours * 3600 + minutes * 60 + (seconds || 0);
+};

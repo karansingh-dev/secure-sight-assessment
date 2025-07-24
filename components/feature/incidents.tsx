@@ -67,6 +67,10 @@ export default function IncidentPreview() {
   const [resolvingIncidentIds, setResolvingIncidentIds] = useState<string[]>(
     []
   );
+
+  const handleTimelineIncidentSelect = (incident: Incident | null) => {
+    setSelectedIncident(incident);
+  };
   const [uniqueCameras, setUniqueCameras] = useState<Camera[]>();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -142,7 +146,7 @@ export default function IncidentPreview() {
     <div className="flex flex-col gap-6">
       <div className="flex px-[16px] gap-4 items-start">
         <div className="flex-[1.4] relative">
-          {selectedIncident && (
+          {selectedIncident ? (
             <>
               <div className="bg-[#131313] rounded-md flex gap-2 items-center w-43 p-1 text-sm text-center absolute left-10 top-2 text-slate-200 border-1 border-[#242424] z-10">
                 <CalendarDays className="w-4 h-4" />
@@ -158,7 +162,121 @@ export default function IncidentPreview() {
                 <Disc className="w-4 h-4 text-red-500" />
                 Camera - {selectedIncident.camera.location}
               </div>
+              <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                {uniqueCameras
+                  ?.filter((camera) => camera.id !== selectedIncident.camera.id)
+                  .slice(0, 2)
+                  .map((camera) => {
+                    // Find the most recent incident for current camera
+                    const recentIncident = incidents
+                      .filter((incident) => incident.camera.id === camera.id)
+                      .sort(
+                        (a, b) =>
+                          new Date(b.tsStart).getTime() -
+                          new Date(a.tsStart).getTime()
+                      )[0];
+
+                    return (
+                      <div
+                        key={camera.id}
+                        onClick={() => {
+                          if (recentIncident) {
+                            setSelectedIncident(recentIncident);
+                          }
+                        }}
+                        className="relative h-30 w-40 rounded border-2 border-gray-600 hover:border-yellow-300 cursor-pointer transition-colors overflow-hidden bg-[#1a1a1a]"
+                        title={`Switch to ${camera.name}`}
+                      >
+                        {recentIncident ? (
+                          <img
+                            src={recentIncident.thumbnailUrl}
+                            alt={camera.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Disc className="w-4 h-4 text-gray-500" />
+                          </div>
+                        )}
+
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
+                          <span className="text-white text-xs font-medium truncate block">
+                            {camera.name}
+                          </span>
+                        </div>
+
+                        {/* Active indicator if this camera has incidents */}
+                        {recentIncident && (
+                          <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
             </>
+          ) : (
+            <div className="rounded-md w-full min-h-120 max-h-120 bg-[#0a0a0a] border-2 border-dashed border-gray-600 flex flex-col items-center justify-center text-gray-400 p-6">
+              {/* Monitoring icon */}
+              <div className="w-12 h-12 mb-4 bg-[#1a1a1a] rounded-full flex items-center justify-center border border-gray-600">
+                <Disc className="w-6 h-6 text-gray-500" />
+              </div>
+              {/* Title */}
+              <p className="text-lg font-medium text-gray-300 mb-4">
+                Timeline Navigation
+              </p>
+              {/* Usage instructions */}
+              <div className="text-center flex flex-col items-start space-y-3   text-sm text-gray-500 max-w-140">
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-yellow-300 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">Click camera rows</strong>{" "}
+                    to select different cameras
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-orange-400 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">
+                      Click on Incident in the Inicident List
+                    </strong>{" "}
+                    to select specific incidents
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-blue-400 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">Drag the scrubber</strong>{" "}
+                    to navigate through time
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-purple-400 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">Use ⏮️ ⏭️ buttons</strong>{" "}
+                    to jump between incidents
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-green-400 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">Press play ▶️</strong> to
+                    auto-scroll timeline
+                  </span>
+                </div>
+              </div>
+              {/* Current status */}
+              <div className="mt-6 px-4 py-2 bg-[#131313] rounded-full text-xs border border-gray-700 text-gray-400">
+                No incidents at current position
+              </div>
+              {/* System status indicator */}
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-600">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>System operational</span>
+              </div>
+            </div>
           )}
         </div>
 
@@ -290,7 +408,11 @@ export default function IncidentPreview() {
         </Card>
       </div>
       {uniqueCameras && (
-        <Timeline uniqueCameras={uniqueCameras} incidents={incidents} />
+        <Timeline
+          uniqueCameras={uniqueCameras}
+          incidents={incidents}
+          onIncidentSelect={handleTimelineIncidentSelect}
+        />
       )}
     </div>
   );
