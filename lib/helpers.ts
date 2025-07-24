@@ -63,3 +63,19 @@ export const parseTimeToSeconds = (timeString: string): number => {
   const [hours, minutes, seconds] = timeString.split(":").map(Number);
   return hours * 3600 + minutes * 60 + (seconds || 0);
 };
+
+
+
+export const formatDuration = (startTime: string, endTime: string): string => {
+  const startSeconds = parseTimeToSeconds(formatTime(startTime));
+  const endSeconds = parseTimeToSeconds(formatTime(endTime));
+  const durationSeconds = endSeconds - startSeconds;
+  
+  if (durationSeconds < 60) {
+    return `${durationSeconds}s`;
+  } else {
+    const minutes = Math.floor(durationSeconds / 60);
+    const seconds = durationSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  }
+};

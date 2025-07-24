@@ -1,13 +1,14 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import TimeLineSvg24Hours from "../custom/time-line-svg";
 import {
+  formatDuration,
   formatTime,
   getOffsetPxFromTime,
   getTimeFromLeftPx,
   parseTimeToSeconds,
 } from "@/lib/helpers";
 import { INCIDENT_TYPE_ICONS } from "./incidents";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Incident } from "@/types/incidents";
 
 type Camera = {
@@ -34,6 +35,15 @@ export default function Timeline({
   const [scrubberLeft, setScrubberLeft] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
+
+  const handleIncidentClick = (incident: Incident) => {
+    const incidentPosition = getOffsetPxFromTime(incident.tsStart);
+    updateScrubberAndIncident(
+      Math.max(0, Math.min(incidentPosition, MAX_WIDTH))
+    );
+    onIncidentSelect(incident);
+    setCurrentActiveIncident(incident);
+  };
 
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(
     uniqueCameras.length > 0 ? uniqueCameras[0].id : null
@@ -228,7 +238,7 @@ export default function Timeline({
   const [isPlaying, setIsPlaying] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const SCRUBBER_SPEED = 1;
+  const SCRUBBER_SPEED = 0.5;
   const MAX_WIDTH = 2350;
 
   const handleMouseDown = () => {
@@ -348,20 +358,62 @@ export default function Timeline({
                         const left = getOffsetPxFromTime(incident.tsStart);
 
                         return (
+                          //   <div
+                          //     key={incident.id}
+                          //     className={`absolute flex items-center rounded p-1 ${
+                          //       INCIDENT_TYPE_COLORS[incident.type] ??
+                          //       "bg-[#292929]"
+                          //     } ${isSelected ? "ring-1 ring-yellow-300" : ""}`}
+                          //     style={{ left: `${left}px` }}
+                          //     title={`${
+                          //       incident.type
+                          //     } - Duration: ${formatDuration(
+                          //       incident.tsStart,
+                          //       incident.tsEnd
+                          //     )}`}
+                          //   >
+                          //     {
+                          //       INCIDENT_TYPE_ICONS.find(
+                          //         (item) => item.type === incident.type
+                          //       )?.icon
+                          //     }
+                          //     <span className="font-semibold text-white text-[10px]">
+                          //       {incident.type}
+                          //     </span>
+                          //   </div>
                           <div
                             key={incident.id}
-                            className={`absolute flex items-center rounded p-1 ${
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIncidentClick(incident);
+                            }}
+                            className={`absolute flex items-center justify-center rounded p-1 group transition-all duration-200 cursor-pointer ${
                               INCIDENT_TYPE_COLORS[incident.type] ??
                               "bg-[#292929]"
-                            } ${isSelected ? "ring-1 ring-yellow-300" : ""}`}
-                            style={{ left: `${left}px` }}
-                          >
-                            {
-                              INCIDENT_TYPE_ICONS.find(
-                                (item) => item.type === incident.type
-                              )?.icon
+                            } ${
+                              isSelected
+                                ? "ring-1 ring-yellow-300 ring-inset"
+                                : ""
                             }
-                            <span className="font-semibold text-white text-[10px]">
+  // expands on hover
+  w-8 h-6 hover:w-auto hover:min-w-20 hover:justify-start hover:px-2`}
+                            style={{ left: `${left}px` }}
+                            title={`${
+                              incident.type
+                            } - Duration: ${formatDuration(
+                              incident.tsStart,
+                              incident.tsEnd
+                            )}`}
+                          >
+                            <div className="flex-shrink-0 w-4 h-4 flex items-center justify-center">
+                              {
+                                INCIDENT_TYPE_ICONS.find(
+                                  (item) => item.type === incident.type
+                                )?.icon
+                              }
+                            </div>
+
+                            <span className="font-semibold text-white text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-1 whitespace-nowrap overflow-hidden max-w-0 group-hover:max-w-32">
                               {incident.type}
                             </span>
                           </div>

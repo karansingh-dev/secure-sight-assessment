@@ -142,6 +142,13 @@ export default function IncidentPreview() {
   if (loading) return <LoadingScreen />;
   if (!incidents) return <div>Error Loading data, Reload Again</div>;
 
+  if (incidents.length === 0)
+    return (
+      <div className="text-rose-500 text-4xl text-center">
+        Reload Again to Load Data
+      </div>
+    );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex px-[16px] gap-4 items-start">
@@ -231,6 +238,15 @@ export default function IncidentPreview() {
                   <span>
                     <strong className="text-gray-300">Click camera rows</strong>{" "}
                     to select different cameras
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
+                  <span className="w-3 h-3 bg-blue-300 rounded-full flex-shrink-0"></span>
+                  <span>
+                    <strong className="text-gray-300">
+                      Hover Over Incident Markers in Time Line
+                    </strong>{" "}
+                    to see full Information
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-3 p-2 hover:bg-[#131313] rounded transition-colors">
