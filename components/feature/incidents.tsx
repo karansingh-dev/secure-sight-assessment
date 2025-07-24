@@ -144,8 +144,8 @@ export default function IncidentPreview() {
 
   if (incidents.length === 0)
     return (
-      <div className="text-rose-500 text-4xl text-center">
-        Reload Again to Load Data
+      <div className="text-amber-500 text-4xl text-center">
+        Please reload the page, Sometimes it takes time to load the data.
       </div>
     );
 
