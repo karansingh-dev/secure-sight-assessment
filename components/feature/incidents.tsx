@@ -162,7 +162,7 @@ export default function IncidentPreview() {
               </div>
               <img
                 src={selectedIncident.thumbnailUrl}
-                className="rounded-md w-full min-h-120 max-h-120 object-cover"
+                className="rounded-md w-full min-h-120 max-h-120 object-fill"
                 alt={selectedIncident.type}
               />
               <div className="bg-[#131313] rounded-md flex gap-2 items-center w-50 p-1 text-sm text-center absolute left-10 top-110 text-slate-200 border-1 border-[#242424] z-10">
@@ -198,7 +198,7 @@ export default function IncidentPreview() {
                           <img
                             src={recentIncident.thumbnailUrl}
                             alt={camera.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-covere"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -334,7 +334,7 @@ export default function IncidentPreview() {
                     key={incident.id}
                     className={`
     flex gap-3 items-center rounded-lg p-2
-    hover:bg-[#0d0d0d] transition-colors duration-200
+    hover:bg-[#0d0d0d]
     transition-opacity duration-500 ease-in-out
     ${
       resolvingIncidentIds.includes(incident.id)
@@ -347,7 +347,10 @@ export default function IncidentPreview() {
                       <img
                         src={incident.thumbnailUrl}
                         alt={incident.type}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-fill"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
                       />
                     </div>
 
@@ -408,6 +411,7 @@ export default function IncidentPreview() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+
                         handleResolve(incident.id);
                       }}
                       disabled={resolvingIncidentIds.includes(incident.id)}

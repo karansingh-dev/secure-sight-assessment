@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-import Link from "next/link";
 
 export default function NavBar() {
   return (
@@ -68,7 +67,7 @@ export default function NavBar() {
 
   "
         ></div>
-        <Link href="/" className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <svg
             width="13"
             height="12"
@@ -82,8 +81,8 @@ export default function NavBar() {
             />
           </svg>
           <span className="text-white text-[16px] font-medium">Dashboard</span>
-        </Link>
-        <Link href="/cameras" className="flex items-center gap-1">
+        </div>
+        <div className="flex items-center gap-1">
           <svg
             width="14"
             height="14"
@@ -97,8 +96,8 @@ export default function NavBar() {
             />
           </svg>
           <span className="text-white text-[16px] font-medium">Cameras</span>
-        </Link>
-        <Link href="/scenes" className="flex items-center gap-1">
+        </div>
+        <div className="flex items-center gap-1">
           <svg
             width="13"
             height="12"
@@ -112,8 +111,8 @@ export default function NavBar() {
             />
           </svg>
           <span className="text-white text-[16px] font-medium">Scenes</span>
-        </Link>
-        <Link href="/incidents" className="flex items-center gap-1">
+        </div>
+        <div className="flex items-center gap-1">
           <svg
             width="15"
             height="13"
@@ -127,8 +126,8 @@ export default function NavBar() {
             />
           </svg>
           <span className="text-white text-[16px] font-medium">Incidents</span>
-        </Link>
-        <Link href="/users" className="flex items-center gap-1">
+        </div>
+        <div className="flex items-center gap-1">
           <svg
             width="14"
             height="11"
@@ -142,7 +141,7 @@ export default function NavBar() {
             />
           </svg>
           <span className="text-white text-[16px] font-medium">Users</span>
-        </Link>
+        </div>
       </div>
 
       <div className="text-white">

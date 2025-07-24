@@ -204,6 +204,13 @@ export default function Timeline({
     });
   };
 
+  const TIMELINE_OFFSET = 160;
+  const [isPlaying, setIsPlaying] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const SCRUBBER_SPEED = 0.5;
+  const MAX_WIDTH = 2350;
+
   const togglePlay = () => {
     if (isPlaying) {
       if (intervalRef.current) {
@@ -234,15 +241,14 @@ export default function Timeline({
     }
   };
 
-  const TIMELINE_OFFSET = 160;
-  const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const SCRUBBER_SPEED = 0.5;
-  const MAX_WIDTH = 2350;
-
   const handleMouseDown = () => {
     setIsDragging(true);
+
+    if (isPlaying && intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      setIsPlaying(false);
+    }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
