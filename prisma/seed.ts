@@ -40,8 +40,7 @@ async function populate() {
     ["gun4.jpg", "face3.jpg", "unauthorized_access4.jpg", "face4.jpg"],
   ];
 
-  const baseDate = "2025-07-21T00:00:00Z";
-  const base = new Date(baseDate);
+  const base = new Date(Date.UTC(2025, 6, 21, 0, 0, 0));
 
   function getRandomHour(exclude: number[], buffer = 1): number {
     let hour: number;

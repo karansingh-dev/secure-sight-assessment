@@ -1,30 +1,4 @@
-export function formatTime(dateStr: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(new Date(dateStr));
-}
-
-export function formatDate(dateStr: string) {
-  // For '7-Jul-2025' style
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-    .format(new Date(dateStr))
-    .replace(/ /g, "-");
-}
-
-export function formatDate2(dateStr: string) {
-  const dt = new Date(dateStr);
-  const month = dt.getMonth() + 1; // Zero-based months: add 1
-  const day = dt.getDate().toString().padStart(2, "0"); // Always 2 digits
-  const year = dt.getFullYear();
-  return `${month}/${day}/${year}`;
-}
+// Get pixel offset from a UTC ISO timestamp
 export function getOffsetPxFromTime(
   isoTimestamp: string,
   timelineWidth = 2350
@@ -33,14 +7,15 @@ export function getOffsetPxFromTime(
   if (isNaN(date.getTime())) return 0;
 
   const totalSeconds =
-    date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+    date.getUTCHours() * 3600 +
+    date.getUTCMinutes() * 60 +
+    date.getUTCSeconds();
 
   const secondsInDay = 27 * 3600;
-
-  const offsetPx = (totalSeconds / secondsInDay) * timelineWidth;
-  return offsetPx;
+  return (totalSeconds / secondsInDay) * timelineWidth;
 }
 
+// Convert left px on timeline to UTC time string
 export function getTimeFromLeftPx(px: number, timelineWidth = 2350) {
   const secondsInDay = 27 * 3600;
   const timeInSeconds = (px / timelineWidth) * secondsInDay;
@@ -53,4 +28,38 @@ export function getTimeFromLeftPx(px: number, timelineWidth = 2350) {
     2,
     "0"
   )}:${String(seconds).padStart(2, "0")}`;
+}
+
+// Format a UTC time for display (hh:mm:ss)
+export function formatTime(dateStr: string) {
+  const date = new Date(dateStr);
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(
+    date.getUTCMinutes()
+  ).padStart(2, "0")}:${String(date.getUTCSeconds()).padStart(2, "0")}`;
+}
+
+// Format a UTC date (e.g., 7-Jul-2025)
+export function formatDate(dateStr: string) {
+  const date = new Date(dateStr);
+  const day = date.getUTCDate();
+  const month = date.toLocaleString("en-GB", {
+    month: "short",
+    timeZone: "UTC",
+  });
+  const year = date.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+// Format as MM/DD/YYYY in UTC
+export function formatDate2(dateStr: string) {
+  const dt = new Date(dateStr);
+  const month = dt.getUTCMonth() + 1;
+  const day = dt.getUTCDate().toString().padStart(2, "0");
+  const year = dt.getUTCFullYear();
+  return `${month}/${day}/${year}`;
+}
+
+export function parseTimeToSeconds(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 3600 + minutes * 60;
 }

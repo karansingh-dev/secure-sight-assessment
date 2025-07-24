@@ -1,28 +1,24 @@
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import TimeLineSvg24Hours from "../custom/time-line-svg";
-import { getOffsetPxFromTime, getTimeFromLeftPx } from "@/lib/helpers";
+import {
+  formatTime,
+  getOffsetPxFromTime,
+  getTimeFromLeftPx,
+  parseTimeToSeconds,
+} from "@/lib/helpers";
 import { INCIDENT_TYPE_ICONS } from "./incidents";
 import { useState, useRef, useEffect } from "react";
+import { Incident } from "@/types/incidents";
 
 type Camera = {
   id: string;
   name: string;
 };
 
-type Incident = {
-  id: string;
-  type: string;
-  tsStart: string;
-  camera: {
-    id: string;
-  };
-};
-
 type TimelineProps = {
   uniqueCameras: Camera[];
   incidents: Incident[];
 };
-
 const INCIDENT_TYPE_COLORS: Record<string, string> = {
   "Unauthorized Access": "bg-[#481607]",
   "Gun Threat": "bg-[#6e0f0f]",
@@ -36,7 +32,6 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
 
   const togglePlay = () => {
     if (isPlaying) {
-      // Pause
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -50,7 +45,6 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
           const next = prev + SCRUBBER_SPEED;
 
           if (next >= MAX_WIDTH) {
-            // Stop at end
             clearInterval(intervalRef.current!);
             setIsPlaying(false);
             return MAX_WIDTH;
@@ -58,7 +52,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
 
           return next;
         });
-      }, 50); // adjust speed as needed
+      }, 50);
     }
   };
 
@@ -67,7 +61,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const SCRUBBER_SPEED = 2;
-  const MAX_WIDTH = 2350 - TIMELINE_OFFSET;
+  const MAX_WIDTH = 2350;
 
   const handleMouseDown = () => {
     setIsDragging(true);
@@ -81,9 +75,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
 
     const newLeft = e.clientX - timelineRect.left - TIMELINE_OFFSET;
 
-    // Optional: clamp to 0–max range
-    const max = timelineRect.width;
-    setScrubberLeft(Math.max(0, Math.min(newLeft, max)));
+    setScrubberLeft(Math.max(0, Math.min(newLeft, MAX_WIDTH)));
   };
 
   const handleMouseUp = () => {
@@ -165,7 +157,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                     <p className="w-40 text-white font-medium shrink-0">
                       {camera.name}
                     </p>
-                    <div className="relative w-[2600px] h-[30px] overflow-hidden rounded-sm pr-4">
+                    <div className="relative w-[2600px] h-[30px] overflow-hidden rounded-sm">
                       {cameraIncidents.map((incident: any) => {
                         const left = getOffsetPxFromTime(incident.tsStart);
 
@@ -176,7 +168,7 @@ export default function Timeline({ uniqueCameras, incidents }: TimelineProps) {
                               INCIDENT_TYPE_COLORS[incident.type] ??
                               "bg-[#292929]"
                             }`}
-                            style={{ left: `${left - 7}px` }}
+                            style={{ left: `${left}px` }}
                           >
                             {
                               INCIDENT_TYPE_ICONS.find(
