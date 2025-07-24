@@ -1,8 +1,8 @@
-// prisma/seed.ts
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function populate() {
+  // Clean slate: Remove all existing data to prevent duplicates
   await prisma.incident.deleteMany();
   await prisma.camera.deleteMany();
 
@@ -16,8 +16,12 @@ async function populate() {
     }),
   ]);
 
+  // Store cameras in array for easier iteration
+
   const cameras = [camera1, camera2, camera3];
 
+  // Define incident types for each camera (4 incidents per camera)
+  // Each sub-array corresponds to one camera's incident types
   const types = [
     [
       "Unauthorized Access",
@@ -56,6 +60,7 @@ async function populate() {
   for (let c = 0; c < cameras.length; c++) {
     const usedHours: number[] = [];
     for (let i = 0; i < 4; i++) {
+      // Generate random hour (0-22 to account for buffer)
       const hour = getRandomHour(usedHours);
       usedHours.push(hour);
 
