@@ -6,6 +6,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const resolved = searchParams.get("resolved");
 
+    await prisma.$connect();
+
     const where = resolved !== null ? { resolved: resolved === "true" } : {};
 
     const incidents = await prisma.incident.findMany({
@@ -26,6 +28,7 @@ export async function GET(request: Request) {
     );
   } catch (error) {
     console.error("[GET /api/incidents] Error:", error);
+    await prisma.$disconnect();
 
     return NextResponse.json(
       { error: "Failed to fetch incidents", success: false },
